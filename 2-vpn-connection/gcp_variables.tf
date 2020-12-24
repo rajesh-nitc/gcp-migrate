@@ -1,11 +1,7 @@
-variable "gcp_credentials_file_path" {
-  description = "Locate the GCP credentials .json file."
-  type        = string
-}
-
 variable "gcp_project_id" {
   description = "GCP Project ID."
   type        = string
+  default     = "ngfw-299010"
 }
 
 variable "gcp_region" {
@@ -29,11 +25,6 @@ variable "gcp_network_cidr" {
 
 variable "gcp_subnet1_cidr" {
   default = "10.240.0.0/24"
-}
-
-variable "gcp_vm_address" {
-  description = "Private IP address for GCP VM instance."
-  default     = "10.240.0.100"
 }
 
 variable "GCP_TUN1_VPN_GW_ASN" {

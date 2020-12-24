@@ -1,8 +1,3 @@
-variable "aws_credentials_file_path" {
-  description = "Locate the AWS credentials file."
-  type        = string
-}
-
 variable "aws_region" {
   description = "Default to Oregon region."
   default     = "us-east-1"
