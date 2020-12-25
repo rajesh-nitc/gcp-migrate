@@ -1,34 +1,47 @@
 locals {
-  bindings = [
-    { role    = "roles/iam.serviceAccountTokenCreator"
-      members = ["serviceAccount:${google_service_account.velos-manager.email}"]
-    },
-    { role    = "roles/iam.serviceAccountUser"
-      members = ["serviceAccount:${google_service_account.velos-manager.email}"]
-    },
-    { role = "roles/logging.logWriter"
-      members = [
-        "serviceAccount:${google_service_account.velos-manager.email}",
-        "serviceAccount:${google_service_account.velos-cloud-extension.email}"
-      ]
-    },
-    { role = "roles/monitoring.metricWriter"
-      members = [
-        "serviceAccount:${google_service_account.velos-manager.email}",
-        "serviceAccount:${google_service_account.velos-cloud-extension.email}"
-      ]
-    },
-    { role    = "roles/monitoring.viewer"
-      members = ["serviceAccount:${google_service_account.velos-manager.email}"]
-    },
-    { role    = "roles/cloudmigration.inframanager"
-      members = ["serviceAccount:${google_service_account.velos-manager.email}"]
-    },
-    { role    = "roles/cloudmigration.storageaccess"
-      members = ["serviceAccount:${google_service_account.velos-cloud-extension.email}"]
-    }
+  manager_roles = [
+    "roles/cloudmigration.inframanager",
+    "roles/cloudmigration.storageaccess",
+    "roles/iam.serviceAccountUser",
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+    "roles/monitoring.viewer",
+    "roles/iam.serviceAccountTokenCreator"
+  ]
+
+  extension_roles = [
+    "roles/cloudmigration.storageaccess",
+    "roles/monitoring.metricWriter",
+    "roles/logging.logWriter"
   ]
 }
+
+resource "google_service_account" "migrate_manager" {
+  account_id   = "migrate-manager"
+  display_name = "migrate-manager"
+  project      = var.project_id
+}
+
+resource "google_service_account" "migrate_extension" {
+  account_id   = "migrate-extension"
+  display_name = "migrate-extension"
+  project      = var.project_id
+}
+
+resource "google_project_iam_member" "manager_sa_roles" {
+  for_each = toset(local.manager_roles)
+  project  = var.project_id
+  role     = each.key
+  member   = "serviceAccount:${google_service_account.migrate_manager.email}"
+}
+
+resource "google_project_iam_member" "ext_sa_roles" {
+  for_each = toset(local.extension_roles)
+  project  = var.project_id
+  role     = each.key
+  member   = "serviceAccount:${google_service_account.migrate_extension.email}"
+}
+
 
 # module "vpc" {
 #   source  = "terraform-google-modules/network/google"
@@ -189,22 +202,22 @@ locals {
 # }
 
 # Service Accounts
-resource "google_service_account" "velos-manager" {
-  account_id   = "velos-manager"
-  display_name = "velos-manager"
-  project      = var.project_id
-}
+# resource "google_service_account" "velos-manager" {
+#   account_id   = "velos-manager"
+#   display_name = "velos-manager"
+#   project      = var.project_id
+# }
 
-resource "google_service_account" "velos-cloud-extension" {
-  account_id   = "velos-cloud-extension"
-  display_name = "velos-cloud-extension"
-  project      = var.project_id
-}
+# resource "google_service_account" "velos-cloud-extension" {
+#   account_id   = "velos-cloud-extension"
+#   display_name = "velos-cloud-extension"
+#   project      = var.project_id
+# }
 
-# Roles
-resource "google_project_iam_binding" "iam" {
-  count   = length(local.bindings)
-  project = var.project_id
-  role    = local.bindings[count.index].role
-  members = local.bindings[count.index].members
-}
+# # Roles
+# resource "google_project_iam_binding" "iam" {
+#   count   = length(local.bindings)
+#   project = var.project_id
+#   role    = local.bindings[count.index].role
+#   members = local.bindings[count.index].members
+# }
